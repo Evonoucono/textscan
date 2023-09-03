@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Stability Check</title>
+    <title>Rear Camera Text Stability Check</title>
     <style>
         #video-container {
             position: relative;
@@ -18,7 +18,7 @@
     </style>
 </head>
 <body>
-    <h1>Text Stability Check</h1>
+    <h1>Rear Camera Text Stability Check</h1>
     <div id="video-container">
         <video id="video" autoplay></video>
         <canvas style="display: none;" id="canvas"></canvas>
@@ -35,11 +35,13 @@
         const canvas = document.getElementById('canvas');
         const stableText = document.getElementById('stable-text');
         const verificationResult = document.getElementById('verification-result');
-
         let previousText = '';
 
-        // Request access to the user's camera
-        navigator.mediaDevices.getUserMedia({ video: true })
+        // Request access to the rear camera
+        navigator.mediaDevices
+            .getUserMedia({
+                video: { facingMode: 'environment' }, // Use the rear camera
+            })
             .then((stream) => {
                 video.srcObject = stream;
                 video.onloadedmetadata = () => {
@@ -47,7 +49,7 @@
                 };
             })
             .catch((error) => {
-                console.error('Error accessing camera:', error);
+                console.error('Error accessing rear camera:', error);
             });
 
         // When the video feed is ready, start scanning for text
