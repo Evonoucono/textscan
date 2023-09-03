@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Stability Check</title>
+    <style>
+        #video-container {
+            position: relative;
+        }
+        #video {
+            width: 100%;
+            max-width: 640px;
+        }
+        #result {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Text Stability Check</h1>
+    <div id="video-container">
+        <video id="video" autoplay></video>
+        <canvas style="display: none;" id="canvas"></canvas>
+    </div>
+    <div id="result">
+        <p>Stable Text:</p>
+        <textarea id="stable-text" rows="5" cols="30"></textarea>
+        <p>Verification Result:</p>
+        <div id="verification-result"></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/2.1.4/tesseract.min.js"></script>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const stableText = document.getElementById('stable-text');
+        const verificationResult = document.getElementById('verification-result');
+
+        let previousText = '';
+
+        // Request access to the user's camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    video.play();
+                };
+            })
+            .catch((error) => {
+                console.error('Error accessing camera:', error);
+            });
+
+        // When the video feed is ready, start scanning for text
+        video.addEventListener('play', () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Continuously scan for text
+            const scanText = async () => {
+                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                const { data: { text } } = await Tesseract.recognize(canvas);
+
+                // Compare the current text with the previous text
+                if (text.trim() === previousText.trim()) {
+                    // Text is stable
+                    stableText.value = text;
+                    verificationResult.textContent = 'Text is stable over multiple frames';
+                } else {
+                    // Text is not stable
+                    stableText.value = '';
+                    verificationResult.textContent = 'Text is not stable';
+                }
+
+                // Update the previous text for the next comparison
+                previousText = text;
+
+                requestAnimationFrame(scanText);
+            };
+
+            scanText();
+        });
+    </script>
+</body>
+</html>
